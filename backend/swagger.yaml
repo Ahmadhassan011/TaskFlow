@@ -7,10 +7,12 @@ info:
     ## Authentication
     Most endpoints require a JWT access token in the `Authorization: Bearer <token>` header.
     
-    ## Roles
-    - **ADMIN** — Full access to all resources
-    - **PROJECT_MANAGER** — Manage own projects and their tasks
-    - **TEAM_MEMBER** — Manage assigned tasks only
+    ## Roles (hierarchy: OWNER ⊃ ADMIN ⊃ MANAGER ⊃ MEMBER ⊃ GUEST)
+    - **OWNER** — Full tenant control, billing, delete workspace
+    - **ADMIN** — Manage users, roles, projects, and system settings
+    - **MANAGER** — Create and manage projects, assign members, manage tasks
+    - **MEMBER** — View assigned projects/tasks, update task progress, add comments
+    - **GUEST** — Read-only access to assigned projects and tasks
   version: 1.0.0
   contact:
     name: TaskFlow Team
@@ -86,7 +88,7 @@ components:
           type: string
         role:
           type: string
-          enum: [ADMIN, PROJECT_MANAGER, TEAM_MEMBER]
+          enum: [OWNER, ADMIN, MANAGER, MEMBER, GUEST]
         isActive:
           type: boolean
         isVerified:
@@ -581,7 +583,7 @@ paths:
           in: query
           schema:
             type: string
-            enum: [ADMIN, PROJECT_MANAGER, TEAM_MEMBER]
+            enum: [OWNER, ADMIN, MANAGER, MEMBER, GUEST]
       responses:
         '200':
           description: Paginated users
@@ -643,7 +645,7 @@ paths:
                   type: string
                 role:
                   type: string
-                  enum: [ADMIN, PROJECT_MANAGER, TEAM_MEMBER]
+                  enum: [OWNER, ADMIN, MANAGER, MEMBER, GUEST]
                 isActive:
                   type: boolean
       responses:

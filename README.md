@@ -155,3 +155,16 @@ TODO → IN_PROGRESS → IN_REVIEW → DONE
 ```
 
 Members and Managers must follow linear progression (no skip/reverse). Admins and Owners can skip or reverse stages. Every status change is logged to the audit trail.
+
+## API Documentation
+
+- **Swagger UI** — `http://localhost:5000/api/docs` (interactive, auto-generated from OpenAPI spec)
+- **Markdown Reference** — [`docs/api-reference.md`](docs/api-reference.md)
+- **Postman Collection** — [`docs/postman-collection.json`](docs/postman-collection.json)
+
+## CI/CD
+
+GitHub Actions runs on every push and PR to `main`:
+
+- **Backend** — lint, build, Prisma generate, unit tests (Vitest, 68 tests)
+- **Frontend** — lint, build (Next.js)

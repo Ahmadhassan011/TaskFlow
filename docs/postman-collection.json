@@ -1,0 +1,700 @@
+{
+  "info": {
+    "name": "TaskFlow API",
+    "description": "Project & Task Management Platform API\n\n## Authentication\nMost endpoints require a JWT Bearer token.\n\n## Roles (hierarchy: OWNER ⊃ ADMIN ⊃ MANAGER ⊃ MEMBER ⊃ GUEST)\n- OWNER — Full tenant control\n- ADMIN — Manage users, roles, projects\n- MANAGER — Create/manage projects and tasks\n- MEMBER — View/update assigned tasks\n- GUEST — Read-only access",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api" },
+    { "key": "token", "value": "" },
+    { "key": "tenantId", "value": "" },
+    { "key": "projectId", "value": "" },
+    { "key": "taskId", "value": "" },
+    { "key": "userId", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{token}}", "type": "string" }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\",\n  \"name\": \"John Doe\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "var json = pm.response.json();",
+                    "if (json.data && json.data.accessToken) {",
+                    "  pm.environment.set('token', json.data.accessToken);",
+                    "  pm.environment.set('tenantId', json.data.user.tenantId || '');",
+                    "}"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/auth/refresh", "host": ["{{baseUrl}}"], "path": ["auth", "refresh"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/auth/profile", "host": ["{{baseUrl}}"], "path": ["auth", "profile"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/auth/password", "host": ["{{baseUrl}}"], "path": ["auth", "password"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"Password123!\",\n  \"newPassword\": \"NewPassword456!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/auth/forgot-password", "host": ["{{baseUrl}}"], "path": ["auth", "forgot-password"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Switch Tenant",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/auth/switch-tenant", "host": ["{{baseUrl}}"], "path": ["auth", "switch-tenant"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenantId\": \"{{tenantId}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/users?page=1&limit=20", "host": ["{{baseUrl}}"], "path": ["users"], "query": [
+              { "key": "page", "value": "1" },
+              { "key": "limit", "value": "20" },
+              { "key": "search", "value": "", "disabled": true },
+              { "key": "role", "value": "", "disabled": true }
+            ]}
+          }
+        },
+        {
+          "name": "Get User",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["users", "{{userId}}"] }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["users", "{{userId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"role\": \"MEMBER\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Deactivate User",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["users", "{{userId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tenants",
+      "item": [
+        {
+          "name": "Get Current Tenant",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/tenants/current", "host": ["{{baseUrl}}"], "path": ["tenants", "current"] }
+          }
+        },
+        {
+          "name": "Update Tenant",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}/tenants/{{tenantId}}", "host": ["{{baseUrl}}"], "path": ["tenants", "{{tenantId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"My Workspace\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "List Members",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/tenants/{{tenantId}}/members", "host": ["{{baseUrl}}"], "path": ["tenants", "{{tenantId}}", "members"] }
+          }
+        },
+        {
+          "name": "Update Member Role",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}/tenants/{{tenantId}}/members/{{userId}}", "host": ["{{baseUrl}}"], "path": ["tenants", "{{tenantId}}", "members", "{{userId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"MEMBER\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Send Invitation",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/tenants/{{tenantId}}/invites", "host": ["{{baseUrl}}"], "path": ["tenants", "{{tenantId}}", "invites"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newuser@example.com\",\n  \"role\": \"MEMBER\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "List Invitations",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/tenants/{{tenantId}}/invites", "host": ["{{baseUrl}}"], "path": ["tenants", "{{tenantId}}", "invites"] }
+          }
+        },
+        {
+          "name": "Accept Invitation",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/tenants/invites/accept", "host": ["{{baseUrl}}"], "path": ["tenants", "invites", "accept"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"invitation-token-here\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Revoke Invitation",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/tenants/{{tenantId}}/invites/{{inviteId}}", "host": ["{{baseUrl}}"], "path": ["tenants", "{{tenantId}}", "invites", "{{inviteId}}"] }
+          }
+        },
+        {
+          "name": "Audit Logs",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/tenants/{{tenantId}}/audit-logs?page=1&limit=50", "host": ["{{baseUrl}}"], "path": ["tenants", "{{tenantId}}", "audit-logs"], "query": [
+              { "key": "page", "value": "1" },
+              { "key": "limit", "value": "50" }
+            ]}
+          }
+        },
+        {
+          "name": "Create Resource Share",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/tenants/{{tenantId}}/shares", "host": ["{{baseUrl}}"], "path": ["tenants", "{{tenantId}}", "shares"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resourceType\": \"PROJECT\",\n  \"resourceId\": \"project-uuid\",\n  \"userId\": \"user-uuid\",\n  \"permission\": \"read\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "List Projects",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/projects?page=1&limit=20", "host": ["{{baseUrl}}"], "path": ["projects"], "query": [
+              { "key": "page", "value": "1" },
+              { "key": "limit", "value": "20" },
+              { "key": "status", "value": "", "disabled": true },
+              { "key": "search", "value": "", "disabled": true }
+            ]}
+          }
+        },
+        {
+          "name": "Create Project",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/projects", "host": ["{{baseUrl}}"], "path": ["projects"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"My Project\",\n  \"description\": \"Project description\",\n  \"status\": \"ACTIVE\",\n  \"color\": \"#6366f1\",\n  \"deadline\": \"2026-08-15T00:00:00.000Z\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "var json = pm.response.json();",
+                    "if (json.data && json.data.id) {",
+                    "  pm.environment.set('projectId', json.data.id);",
+                    "}"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Get Project",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/projects/{{projectId}}", "host": ["{{baseUrl}}"], "path": ["projects", "{{projectId}}"] }
+          }
+        },
+        {
+          "name": "Update Project",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/projects/{{projectId}}", "host": ["{{baseUrl}}"], "path": ["projects", "{{projectId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Project\",\n  \"status\": \"ACTIVE\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Delete Project",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/projects/{{projectId}}", "host": ["{{baseUrl}}"], "path": ["projects", "{{projectId}}"] }
+          }
+        },
+        {
+          "name": "List Project Members",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/projects/{{projectId}}/members", "host": ["{{baseUrl}}"], "path": ["projects", "{{projectId}}", "members"] }
+          }
+        },
+        {
+          "name": "Add Project Member",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/projects/{{projectId}}/members", "host": ["{{baseUrl}}"], "path": ["projects", "{{projectId}}", "members"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"user-uuid\",\n  \"role\": \"MEMBER\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Update Project Member Role",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/projects/{{projectId}}/members/{{userId}}", "host": ["{{baseUrl}}"], "path": ["projects", "{{projectId}}", "members", "{{userId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"MANAGER\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Remove Project Member",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/projects/{{projectId}}/members/{{userId}}", "host": ["{{baseUrl}}"], "path": ["projects", "{{projectId}}", "members", "{{userId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "item": [
+        {
+          "name": "List Tasks",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/tasks?page=1&limit=20", "host": ["{{baseUrl}}"], "path": ["tasks"], "query": [
+              { "key": "page", "value": "1" },
+              { "key": "limit", "value": "20" },
+              { "key": "projectId", "value": "", "disabled": true },
+              { "key": "status", "value": "", "disabled": true },
+              { "key": "search", "value": "", "disabled": true }
+            ]}
+          }
+        },
+        {
+          "name": "Create Task",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/tasks", "host": ["{{baseUrl}}"], "path": ["tasks"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"My Task\",\n  \"description\": \"Task description\",\n  \"projectId\": \"{{projectId}}\",\n  \"status\": \"TODO\",\n  \"priority\": \"MEDIUM\",\n  \"assigneeId\": \"user-uuid\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "var json = pm.response.json();",
+                    "if (json.data && json.data.id) {",
+                    "  pm.environment.set('taskId', json.data.id);",
+                    "}"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Get Task",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/tasks/{{taskId}}", "host": ["{{baseUrl}}"], "path": ["tasks", "{{taskId}}"] }
+          }
+        },
+        {
+          "name": "Update Task",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/tasks/{{taskId}}", "host": ["{{baseUrl}}"], "path": ["tasks", "{{taskId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Task\",\n  \"priority\": \"HIGH\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Delete Task",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/tasks/{{taskId}}", "host": ["{{baseUrl}}"], "path": ["tasks", "{{taskId}}"] }
+          }
+        },
+        {
+          "name": "Change Task Status",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}/tasks/{{taskId}}/status", "host": ["{{baseUrl}}"], "path": ["tasks", "{{taskId}}", "status"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"IN_PROGRESS\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "List Subtasks",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/tasks/{{taskId}}/subtasks", "host": ["{{baseUrl}}"], "path": ["tasks", "{{taskId}}", "subtasks"] }
+          }
+        },
+        {
+          "name": "Create Subtask",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/tasks/{{taskId}}/subtasks", "host": ["{{baseUrl}}"], "path": ["tasks", "{{taskId}}", "subtasks"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Subtask 1\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Toggle Subtask",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}/tasks/{{taskId}}/subtasks/{{subtaskId}}", "host": ["{{baseUrl}}"], "path": ["tasks", "{{taskId}}", "subtasks", "{{subtaskId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"completed\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "List Task Labels",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/tasks/{{taskId}}/labels", "host": ["{{baseUrl}}"], "path": ["tasks", "{{taskId}}", "labels"] }
+          }
+        },
+        {
+          "name": "Add Label to Task",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/tasks/{{taskId}}/labels", "host": ["{{baseUrl}}"], "path": ["tasks", "{{taskId}}", "labels"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"labelId\": \"label-uuid\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Labels",
+      "item": [
+        {
+          "name": "List Labels",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/projects/{{projectId}}/labels", "host": ["{{baseUrl}}"], "path": ["projects", "{{projectId}}", "labels"] }
+          }
+        },
+        {
+          "name": "Create Label",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/projects/{{projectId}}/labels", "host": ["{{baseUrl}}"], "path": ["projects", "{{projectId}}", "labels"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bug\",\n  \"color\": \"#ef4444\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Update Label",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/projects/{{projectId}}/labels/{{labelId}}", "host": ["{{baseUrl}}"], "path": ["projects", "{{projectId}}", "labels", "{{labelId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Critical\",\n  \"color\": \"#dc2626\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Delete Label",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/projects/{{projectId}}/labels/{{labelId}}", "host": ["{{baseUrl}}"], "path": ["projects", "{{projectId}}", "labels", "{{labelId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Comments",
+      "item": [
+        {
+          "name": "List Comments",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/tasks/{{taskId}}/comments?page=1&limit=20", "host": ["{{baseUrl}}"], "path": ["tasks", "{{taskId}}", "comments"], "query": [
+              { "key": "page", "value": "1" },
+              { "key": "limit", "value": "20" }
+            ]}
+          }
+        },
+        {
+          "name": "Create Comment",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/tasks/{{taskId}}/comments", "host": ["{{baseUrl}}"], "path": ["tasks", "{{taskId}}", "comments"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"This is a comment\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Update Comment",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/tasks/{{taskId}}/comments/{{commentId}}", "host": ["{{baseUrl}}"], "path": ["tasks", "{{taskId}}", "comments", "{{commentId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Updated comment\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Delete Comment",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/tasks/{{taskId}}/comments/{{commentId}}", "host": ["{{baseUrl}}"], "path": ["tasks", "{{taskId}}", "comments", "{{commentId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get Stats",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/dashboard/stats", "host": ["{{baseUrl}}"], "path": ["dashboard", "stats"] }
+          }
+        },
+        {
+          "name": "Get Activity",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/activity/me?page=1&limit=20", "host": ["{{baseUrl}}"], "path": ["activity", "me"], "query": [
+              { "key": "page", "value": "1" },
+              { "key": "limit", "value": "20" }
+            ]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "List Notifications",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/notifications?page=1&limit=20", "host": ["{{baseUrl}}"], "path": ["notifications"], "query": [
+              { "key": "page", "value": "1" },
+              { "key": "limit", "value": "20" }
+            ]}
+          }
+        },
+        {
+          "name": "Mark as Read",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}/notifications/{{notificationId}}/read", "host": ["{{baseUrl}}"], "path": ["notifications", "{{notificationId}}", "read"] }
+          }
+        },
+        {
+          "name": "Mark All as Read",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}/notifications/read-all", "host": ["{{baseUrl}}"], "path": ["notifications", "read-all"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Attachments",
+      "item": [
+        {
+          "name": "Upload Attachment",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/tasks/{{taskId}}/attachments", "host": ["{{baseUrl}}"], "path": ["tasks", "{{taskId}}", "attachments"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "/path/to/file.pdf" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Attachments",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/tasks/{{taskId}}/attachments", "host": ["{{baseUrl}}"], "path": ["tasks", "{{taskId}}", "attachments"] }
+          }
+        },
+        {
+          "name": "Delete Attachment",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/attachments/{{attachmentId}}", "host": ["{{baseUrl}}"], "path": ["attachments", "{{attachmentId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+          }
+        }
+      ]
+    }
+  ]
+}
